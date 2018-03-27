@@ -1,0 +1,32 @@
+# A basic TCP load-balancer for scaling out Puppet Servers.
+
+[logging]
+  level = "info"
+  output = "stdout"
+
+[api]
+  enabled = true
+  bind = ":8888"
+  cors = false                    # cross-origin resource sharing
+
+[servers.puppet]
+  bind = "0.0.0.0:8140"
+  balance = "roundrobin"          #  (optional [weight]) "weight" | "leastconn" | "roundrobin" | "iphash" | "leastbandwidth"
+  max_connections = 5
+  client_idle_timeout = "10m"
+  backend_idle_timeout = "10m"
+  backend_connection_timeout = "5s"
+
+[servers.puppet.discovery]
+   kind = "exec"
+   exec_command = [ "/app/backend.sh"]
+   interval = "5s"                 # (required) backends cache invalidation interval; 0 means never.
+   timeout = "3"                   # (optional) max time to wait for discover until falling to failpolicy
+
+[servers.puppet.healthcheck]
+  kind = "exec"
+  interval = "10s"
+  timeout = "3s"
+  exec_expected_positive_output = "0"
+  exec_expected_negative_output = "1"  
+  exec_command = "/app/healthcheck.sh"
